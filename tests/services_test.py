@@ -5,7 +5,7 @@ from binance_helper import services
 
 @pytest.mark.asyncio
 async def test_make_orders_good(mocker):
-    testing_data = {
+    tested_data = {
         "volume": 10000.0,
         "number": 5,
         "amountDif": 50.0,
@@ -49,13 +49,13 @@ async def test_make_orders_good(mocker):
     mocker.patch.object(services.BinanceClient, 'send_request',
                         return_value=mock_send_request)
 
-    result = await services.Service.create_orders(testing_data)
+    result = await services.Service.create_orders(tested_data)
     assert result == expected_result
 
 
 @pytest.mark.asyncio
 async def test_make_orders_error(mocker):
-    testing_data = {
+    tested_data = {
         "volume": 10000.0,
         "number": 1,
         "amountDif": 50.0,
@@ -77,7 +77,7 @@ async def test_make_orders_error(mocker):
     mocker.patch.object(services.BinanceClient, 'send_request',
                         return_value=mock_send_request)
 
-    result = await services.Service.create_orders(testing_data)
+    result = await services.Service.create_orders(tested_data)
     assert result == expected_result
 
 
