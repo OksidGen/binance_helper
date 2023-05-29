@@ -32,31 +32,41 @@ expected_result_good = {
     "quantity": "9.93115000"
 }
 
+tested_data = {
+    "volume": 10000.0,
+    "number": 1,
+    "amountDif": 50.0,
+    "side": "SELL",
+    "priceMin": 200.0,
+    "priceMax": 300.0
+}
+
 
 @pytest.mark.asyncio
 async def test_create_orders_good(cli, mocker):
-    data = dict.fromkeys(['volume','number','amountDif','side','priceMin','priceMax'])
     mocker.patch.object(handlers.Service, 'create_orders',
                         return_value=expected_result_good)
-    resp_good = await cli.post('/create_order', data=json.dumps(data))
+    resp_good = await cli.post('/create_order', data=json.dumps(tested_data))
     assert resp_good.status == 200
     result_good = await resp_good.json()
     assert expected_result_good == result_good
 
 @pytest.mark.asyncio
-async def test_create_orders_no_data(cli):
-    resp_bad = await cli.post('/create_order')
-    assert resp_bad.status == 400
-    result_bad = await resp_bad.json()
-    assert 'error' in result_bad
+async def test_create_orders_json_error(cli):
+    expected_result = {'error':'problem with json decoding, incorrect data'}
+    resp = await cli.post('/create_order')
+    assert resp.status == 400
+    result = await resp.json()
+    assert expected_result == result
 
 @pytest.mark.asyncio
-async def test_create_orders_bad_data(cli):
-    resp_bad = await cli.post('/create_order',data=json.dumps({}))
-    assert resp_bad.status == 400
-    result_bad = await resp_bad.json()
-    assert 'error' in result_bad
-
+async def test_create_orders_validate_error(cli):
+    data = {}
+    resp = await cli.post('/create_order', data=json.dumps(data))
+    assert resp.status == 400
+    result = await resp.json()
+    assert 'error' in result
+    assert 'Validate Error' in result['error']
 
 @pytest.mark.asyncio
 async def test_get_orders(cli, mocker):

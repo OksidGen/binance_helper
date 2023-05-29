@@ -1,5 +1,9 @@
-from binance_helper.services import Service
+import json
+
 from aiohttp import web
+
+from binance_helper.services import Service
+from binance_helper.validators import Validator
 
 
 class Handler:
@@ -11,13 +15,12 @@ class Handler:
     async def create_orders(request):
         try:
             conditions = await request.json()
-        except Exception:
-            return web.json_response({'error':'no json data'},status=400)
-        
-        keys = ('volume','number','amountDif','side','priceMin','priceMax')
-        if not all(key in conditions for key in keys):
-            return web.json_response({'error':'not all keys were transferred'}, status=400)
-        
+            Validator.check_conditions(conditions)
+        except json.decoder.JSONDecodeError:
+            return web.json_response({'error': 'problem with json decoding, incorrect data'}, status=400)
+        except ValueError as err:
+            return web.json_response({'error': str(err)}, status=400)
+
         response = await Service.create_orders(conditions)
 
         return web.json_response(response, status=200)
