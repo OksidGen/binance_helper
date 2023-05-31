@@ -62,7 +62,9 @@ class BinanceClient:
             headers=headers,
         )
 
-        return await response.json()
+        response_data = await response.json()
+
+        return response_data
 
     async def close_session(self):
         await self._session.close()
