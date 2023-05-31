@@ -16,6 +16,7 @@ class Handler:
         try:
             conditions = await request.json()
             Validator.check_conditions(conditions)
+            await Validator.check_binance_conditions(conditions, Service.binance_cli.send_request)
         except json.decoder.JSONDecodeError:
             return web.json_response({'error': 'problem with json decoding, incorrect data'}, status=400)
         except ValueError as err:

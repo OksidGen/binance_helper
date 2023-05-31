@@ -11,7 +11,11 @@ async def test_make_orders_good(mocker):
         "amountDif": 50.0,
         "side": "SELL",
         "priceMin": 200.0,
-        "priceMax": 300.0
+        "priceMax": 300.0,
+        'stepSize': 5,
+        'symbol': 'LTCUSDT',
+        'type': 'LIMIT',
+        'timeInForce': "GTC"
     }
     expected_result = {
         "Successfully created": [
@@ -60,10 +64,13 @@ async def test_make_orders_error(mocker):
         "number": 1,
         "amountDif": 50.0,
         "side": "SELL",
-        "priceMin": 10000.0,
-        "priceMax": 11000.0
+        "priceMin": 200.0,
+        "priceMax": 300.0,
+        'stepSize': 5,
+        'symbol': 'LTCUSDT',
+        'type': 'LIMIT',
+        'timeInForce': "GTC"
     }
-
     mock_send_request = {
         "code": -1013,
         "msg": "Filter failure: PERCENT_PRICE_BY_SIDE"
@@ -88,9 +95,11 @@ async def test_get_orders(mocker):
         "Errors": []
     }
     mock_send_request = []
-    mocker.patch.object(services.BinanceClient, 'send_request',return_value=mock_send_request)
+    mocker.patch.object(services.BinanceClient,
+                        'send_request', return_value=mock_send_request)
     result = await services.Service.get_orders()
     assert expected_result == result
+
 
 @pytest.mark.asyncio
 async def test_delete_orders(mocker):
@@ -99,6 +108,7 @@ async def test_delete_orders(mocker):
         "Errors": []
     }
     mock_send_request = []
-    mocker.patch.object(services.BinanceClient, 'send_request',return_value=mock_send_request)
+    mocker.patch.object(services.BinanceClient,
+                        'send_request', return_value=mock_send_request)
     result = await services.Service.delete_orders()
     assert expected_result == result

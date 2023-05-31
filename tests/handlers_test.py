@@ -41,11 +41,15 @@ async def test_create_orders_good(cli, mocker):
         "amountDif": 50.0,
         "side": "SELL",
         "priceMin": 200.0,
-        "priceMax": 300.0
+        "priceMax": 300.0,
     }
+
+    mocker.patch.object(handlers.Validator, 'check_binance_conditions')
     mocker.patch.object(handlers.Service, 'create_orders',
                         return_value=expected_result_good)
+
     resp_good = await cli.post('/create_order', data=json.dumps(tested_data))
+
     assert resp_good.status == 200
     result_good = await resp_good.json()
     assert expected_result_good == result_good
@@ -54,7 +58,9 @@ async def test_create_orders_good(cli, mocker):
 @pytest.mark.asyncio
 async def test_create_orders_json_error(cli):
     expected_result = {'error': 'problem with json decoding, incorrect data'}
+
     resp = await cli.post('/create_order')
+
     assert resp.status == 400
     result = await resp.json()
     assert expected_result == result
@@ -63,7 +69,9 @@ async def test_create_orders_json_error(cli):
 @pytest.mark.asyncio
 async def test_create_orders_validate_error(cli):
     data = {}
+
     resp = await cli.post('/create_order', data=json.dumps(data))
+
     assert resp.status == 400
     result = await resp.json()
     assert 'error' in result
@@ -71,10 +79,30 @@ async def test_create_orders_validate_error(cli):
 
 
 @pytest.mark.asyncio
+async def test_create_orders_binance_validate_error(cli, mocker):
+    data = {}
+    err_msg = 'Validate Error: From Binance - invalid price values'
+    mocked_error = ValueError(err_msg)
+
+    mocker.patch.object(handlers.Validator, 'check_conditions')
+    mocker.patch.object(handlers.Validator,
+                        'check_binance_conditions', side_effect=mocked_error)
+
+    resp = await cli.post('/create_order', data=json.dumps(data))
+
+    assert resp.status == 400
+    result = await resp.json()
+    assert 'error' in result
+    assert err_msg in result['error']
+
+
+@pytest.mark.asyncio
 async def test_get_orders(cli, mocker):
     mocker.patch.object(handlers.Service, 'get_orders',
                         return_value=expected_result_good)
+
     resp = await cli.get('/get_orders')
+
     assert resp.status == 200
     result = await resp.json()
     assert expected_result_good == result
@@ -84,7 +112,9 @@ async def test_get_orders(cli, mocker):
 async def test_delete_orders(cli, mocker):
     mocker.patch.object(handlers.Service, 'delete_orders',
                         return_value=expected_result_good)
+
     resp = await cli.delete('/delete_orders')
+
     assert resp.status == 200
     result = await resp.json()
     assert expected_result_good == result

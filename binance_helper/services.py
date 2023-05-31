@@ -9,10 +9,11 @@ class Service:
 
     @staticmethod
     async def create_orders(conditions: dict):
-        tasks = []
         average_volume = conditions["volume"] / conditions["number"]
         remained_volume = conditions["volume"]
+        stepSize = conditions.pop('stepSize')
 
+        tasks = []
         for i in range(conditions["number"]):
             price = round(
                 uniform(conditions["priceMin"], conditions["priceMax"]), 2)
@@ -21,16 +22,17 @@ class Service:
                       else round(remained_volume, 2)
                       )
             remained_volume -= volume
-            quantity = round(volume / price, 5)
+            quantity = round(volume / price, stepSize)
 
             tasks.append(
                 asyncio.create_task(
                     Service.binance_cli.send_request(
+                        sign=True,
                         action='NewOrder',
-                        symbol='LTCUSDT',
+                        symbol=conditions['symbol'],
                         side=conditions["side"],
-                        type='LIMIT',
-                        timeInForce='GTC',
+                        type=conditions['type'],
+                        timeInForce=conditions['timeInForce'],
                         price=price,
                         quantity=quantity
                     )
@@ -43,13 +45,13 @@ class Service:
 
     @staticmethod
     async def get_orders():
-        results = await Service.binance_cli.send_request(action='CurrentOpenOrders', symbol='LTCUSDT')
+        results = await Service.binance_cli.send_request(action='CurrentOpenOrders', symbol='LTCUSDT', sign=True)
 
         return brush_results('Your orders', results)
 
     @staticmethod
     async def delete_orders():
-        results = await Service.binance_cli.send_request(action='CancelAllOpenOrderBySymbol', symbol='LTCUSDT')
+        results = await Service.binance_cli.send_request(action='CancelAllOpenOrderBySymbol', symbol='LTCUSDT',sign=True)
 
         return brush_results('Successfully deleted', results)
 

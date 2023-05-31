@@ -22,6 +22,14 @@ class BinanceClient:
         "CurrentOpenOrders": {
             "method": "GET",
             "end": "/api/v3/openOrders"
+        },
+        "ExchangeInfo": {
+            "method": "GET",
+            "end": "/api/v3/exchangeInfo"
+        },
+        "AvgPrice": {
+            "method": "GET",
+            "end": "/api/v3/avgPrice"
         }
     }
     _base_url = ("https://testnet.binance.vision"
@@ -34,23 +42,24 @@ class BinanceClient:
         self._session = ClientSession(self._base_url)
 
     async def send_request(self, action: str, **kwargs):
-        headers = {
-            "X-MBX-APIKEY": self._api_key,
-        }
-
+        headers = {}
+        sign = kwargs.pop('sign', False)
         data_str = urllib.parse.urlencode(kwargs)
-        data_str += f"&timestamp={int(time.time() * 1000)}"
-        data_str += (
-            "&signature=" + hmac.new(
-                key=bytearray(self._secret_key, encoding="utf-8"),
-                msg=data_str.encode("utf-8"),
-                digestmod=hashlib.sha256,
-            ).hexdigest()
-        )
+
+        if sign:
+            headers["X-MBX-APIKEY"] = self._api_key
+            data_str += f"&timestamp={int(time.time() * 1000)}"
+            data_str += (
+                "&signature=" + hmac.new(
+                    key=bytearray(self._secret_key, encoding="utf-8"),
+                    msg=data_str.encode("utf-8"),
+                    digestmod=hashlib.sha256,
+                ).hexdigest()
+            )
         response = await self._session.request(
             method=self._endpoints[action]['method'],
             url=f"{self._endpoints[action]['end']}?{data_str}",
-            headers=headers
+            headers=headers,
         )
 
         return await response.json()
